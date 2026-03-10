@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>James Chorley — Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #080808;
+      --bg-surface:  #0f0f0f;
+      --text:        #f0ede6;
+      --text-dim:    #7a7570;
+      --gold:        #c9a96e;
+      --gold-dim:    rgba(201, 169, 110, 0.15);
+      --gold-glow:   rgba(201, 169, 110, 0.06);
+      --border:      rgba(240, 237, 230, 0.07);
+      --scroll-h:    280px;
+      --header-h:    64px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Mono', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      overflow-x: hidden;
+      cursor: none;
+    }
+
+    /* ── Custom Cursor ─────────────────────────────────────────────── */
+    #cursor-dot {
+      position: fixed;
+      width: 6px; height: 6px;
+      background: var(--gold);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9999;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s ease, opacity 0.3s;
+    }
+    #cursor-ring {
+      position: fixed;
+      width: 32px; height: 32px;
+      border: 1px solid rgba(201,169,110,0.5);
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 9998;
+      transform: translate(-50%, -50%);
+      transition: transform 0.18s ease, width 0.3s ease, height 0.3s ease, opacity 0.3s;
+    }
+    body:has(a:hover) #cursor-ring,
+    body:has(button:hover) #cursor-ring,
+    body:has(.project-header:hover) #cursor-ring,
+    body:has(.media-item:hover) #cursor-ring {
+      width: 52px; height: 52px;
+      opacity: 0.6;
+    }
+
+    /* ── Scrollbar ─────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 3px; height: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--gold-dim); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(201,169,110,0.4); }
+
+    /* ── Site Header ───────────────────────────────────────────────── */
+    #site-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 48px;
+      z-index: 100;
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.4s, background 0.4s;
+    }
+    #site-header.scrolled {
+      border-color: var(--border);
+      background: rgba(8,8,8,0.92);
+      backdrop-filter: blur(12px);
+    }
+
+    .site-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .site-name span { color: var(--gold); }
+
+    nav { display: flex; gap: 32px; align-items: center; }
+    nav a {
+      color: var(--text-dim);
+      text-decoration: none;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--gold); }
+
+    /* ── Hero ──────────────────────────────────────────────────────── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 48px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg-line {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 1px;
+      background: var(--border);
+    }
+    .hero-bg-line:nth-child(1) { left: 25%; }
+    .hero-bg-line:nth-child(2) { left: 50%; }
+    .hero-bg-line:nth-child(3) { left: 75%; }
+
+    .hero-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.3s forwards;
+    }
+
+    .hero-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(56px, 9vw, 130px);
+      font-weight: 300;
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      opacity: 0;
+      animation: fadeUp 0.9s 0.5s forwards;
+    }
+    .hero-name em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .hero-tagline {
+      margin-top: 32px;
+      max-width: 460px;
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--text-dim);
+      opacity: 0;
+      animation: fadeUp 0.9s 0.7s forwards;
+    }
+
+    .hero-meta {
+      position: absolute;
+      bottom: 80px;
+      right: 48px;
+      text-align: right;
+      opacity: 0;
+      animation: fadeUp 0.9s 0.9s forwards;
+    }
+    .hero-meta p {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      line-height: 2;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 32px;
+      left: 48px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      opacity: 0;
+      animation: fadeUp 1s 1.1s forwards;
+    }
+    .scroll-hint::before {
+      content: '';
+      display: block;
+      width: 40px;
+      height: 1px;
+      background: var(--gold);
+      animation: expandLine 1s 1.5s both;
+    }
+
+    @keyframes expandLine {
+      from { width: 0; opacity: 0; }
+      to   { width: 40px; opacity: 1; }
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Projects Section ──────────────────────────────────────────── */
+    #projects {
+      padding: 0 0 120px;
+    }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 48px 48px 64px;
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Individual Project ────────────────────────────────────────── */
+    .project {
+      border-top: 1px solid var(--border);
+      position: relative;
+    }
+
+    .project-header {
+      display: grid;
+      grid-template-columns: 72px 1fr auto auto 40px;
+      align-items: center;
+      gap: 24px;
+      padding: 28px 48px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.3s;
+      user-select: none;
+    }
+    .project-header:hover { background: rgba(201,169,110,0.025); }
+
+    .project-number {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 11px;
+      font-weight: 300;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+    }
+
+    .project-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(22px, 3.5vw, 38px);
+      font-weight: 300;
+      letter-spacing: 0.01em;
+      color: var(--text);
+      transition: color 0.3s;
+    }
+    .project-header:hover .project-title { color: var(--gold); }
+    .project.expanded .project-title { color: var(--gold); }
+
+    .project-year {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--text-dim);
+      white-space: nowrap;
+    }
+
+    .project-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .tag {
+      font-size: 9px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      border: 1px solid var(--gold-dim);
+      padding: 3px 8px;
+      border-radius: 1px;
+    }
+
+    .toggle-arrow {
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-dim);
+      transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s;
+    }
+    .toggle-arrow svg { display: block; }
+    .project.expanded .toggle-arrow {
+      transform: rotate(180deg);
+      color: var(--gold);
+    }
+
+    /* Ghost number */
+    .project-ghost-num {
+      position: absolute;
+      right: 80px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 120px;
+      font-weight: 300;
+      color: rgba(201,169,110,0.04);
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+      transition: color 0.4s;
+    }
+    .project.expanded .project-ghost-num { color: rgba(201,169,110,0.07); }
+
+    /* ── Project Body ──────────────────────────────────────────────── */
+    .project-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .project-body-inner {
+      padding: 0 48px 48px;
+    }
+
+    .project-description {
+      max-width: 540px;
+      font-size: 13px;
+      line-height: 1.9;
+      color: var(--text-dim);
+      margin-bottom: 36px;
+    }
+    .project-description strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    /* ── Media Scroll ──────────────────────────────────────────────── */
+    .media-scroll-wrapper {
+      position: relative;
+    }
+
+    .media-fade {
+      position: absolute;
+      top: 0; bottom: 0;
+      width: 80px;
+      pointer-events: none;
+      z-index: 2;
+      transition: opacity 0.3s;
+    }
+    .media-fade-left {
+      left: 0;
+      background: linear-gradient(to right, var(--bg), transparent);
+      opacity: 0;
+    }
+    .media-fade-right {
+      right: 0;
+      background: linear-gradient(to left, var(--bg), transparent);
+      opacity: 1;
+    }
+
+    .media-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      scroll-snap-type: x proximity;
+      padding-bottom: 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+    .media-scroll::-webkit-scrollbar { height: 2px; }
+
+    .media-item {
+      flex-shrink: 0;
+      height: var(--scroll-h);
+      border-radius: 2px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      scroll-snap-align: start;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 0.5s ease, transform 0.5s ease, box-shadow 0.3s ease;
+    }
+    .media-item.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .media-item:hover {
+      box-shadow: 0 0 0 1px var(--gold-dim), 0 16px 40px rgba(0,0,0,0.6);
+    }
+
+    .media-item img,
+    .media-item video {
+      height: 100%;
+      width: auto;
+      display: block;
+      object-fit: cover;
+    }
+    .media-item.is-video img { width: 100%; }
+
+    .media-item-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(8,8,8,0.0);
+      transition: background 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .media-item:hover .media-item-overlay { background: rgba(8,8,8,0.35); }
+
+    .play-icon {
+      opacity: 0;
+      transition: opacity 0.3s;
+      color: var(--text);
+    }
+    .is-video .play-icon { opacity: 0.7; }
+    .media-item:hover .play-icon { opacity: 1; }
+
+    .media-caption {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 14px 12px;
+      background: linear-gradient(transparent, rgba(8,8,8,0.85));
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      color: rgba(240,237,230,0.7);
+      transform: translateY(4px);
+      opacity: 0;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+    .media-item:hover .media-caption {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* ── Lightbox ──────────────────────────────────────────────────── */
+    #lightbox {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: rgba(5,5,5,0.97);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+    }
+    #lightbox.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    #lb-media-wrap {
+      position: relative;
+      max-width: calc(100vw - 160px);
+      max-height: calc(100vh - 160px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #lb-img {
+      max-width: 100%;
+      max-height: calc(100vh - 160px);
+      object-fit: contain;
+      border-radius: 2px;
+      display: block;
+    }
+    #lb-video {
+      max-width: 100%;
+      max-height: calc(100vh - 160px);
+      border-radius: 2px;
+      display: none;
+    }
+    #lightbox.showing-video #lb-img { display: none; }
+    #lightbox.showing-video #lb-video { display: block; }
+
+    #lb-top {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      padding: 20px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #lb-counter {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--text-dim);
+    }
+
+    #lb-close {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      transition: color 0.2s, border-color 0.2s;
+    }
+    #lb-close:hover { color: var(--gold); border-color: var(--gold-dim); }
+
+    #lb-caption {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 20px 32px;
+      text-align: center;
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+    }
+
+    .lb-nav {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      cursor: pointer;
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+    .lb-nav:hover {
+      color: var(--gold);
+      border-color: var(--gold-dim);
+      background: var(--gold-glow);
+    }
+    #lb-prev { left: 24px; }
+    #lb-next { right: 24px; }
+
+    /* ── Footer ────────────────────────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+      font-weight: 300;
+      letter-spacing: 0.1em;
+      color: var(--text-dim);
+    }
+    .footer-copy {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: rgba(122,117,112,0.5);
+    }
+
+    /* ── Grain overlay ─────────────────────────────────────────────── */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9000;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      background-size: 256px 256px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Custom cursor -->
+  <div id="cursor-dot"></div>
+  <div id="cursor-ring"></div>
+
+  <!-- ── Site Header ── -->
+  <header id="site-header">
+    <a class="site-name" href="#hero">James <span>Chorley</span></a>
+    <nav>
+      <a href="#projects">Work</a>
+      <a href="#about">About</a>
+      <a href="mailto:james@example.com">Contact</a>
+    </nav>
+  </header>
+
+  <!-- ── Hero ── -->
+  <section id="hero">
+    <div class="hero-bg-line"></div>
+    <div class="hero-bg-line"></div>
+    <div class="hero-bg-line"></div>
+
+    <p class="hero-eyebrow">Selected Work — 2021–2025</p>
+    <h1 class="hero-name">James<br><em>Chorley</em></h1>
+    <p class="hero-tagline">
+      Creative direction, brand identity, and visual systems — built for brands
+      that refuse to be ordinary.
+    </p>
+
+    <div class="hero-meta">
+      <p>London / Remote</p>
+      <p>Available for projects</p>
+    </div>
+
+    <div class="scroll-hint">Scroll to explore</div>
+  </section>
+
+  <!-- ── Projects ── -->
+  <section id="projects">
+    <p class="section-label">Selected Projects</p>
+
+    <!-- Project 1 -->
+    <article class="project" id="project-1">
+      <div class="project-header" onclick="toggleProject(this)">
+        <span class="project-number">01</span>
+        <h2 class="project-title">Brand Identity System</h2>
+        <span class="project-year">2024</span>
+        <div class="project-tags">
+          <span class="tag">Branding</span>
+          <span class="tag">Identity</span>
+          <span class="tag">Print</span>
+        </div>
+        <div class="toggle-arrow">
+          <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+            <path d="M1 1L7 7L13 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="project-ghost-num">01</span>
+      </div>
+      <div class="project-body">
+        <div class="project-body-inner">
+          <p class="project-description">
+            A comprehensive brand identity system developed for a luxury hospitality group expanding
+            across three continents. The work encompassed <strong>logo design</strong>, typography
+            hierarchy, colour palette, and a 180-page brand standards guide used across 14 properties.
+          </p>
+          <div class="media-scroll-wrapper">
+            <div class="media-fade media-fade-left"></div>
+            <div class="media-fade media-fade-right"></div>
+            <div class="media-scroll" onscroll="updateFades(this)">
+              <div class="media-item" data-src="https://picsum.photos/seed/brand1/480/280" data-caption="Logo mark — primary lockup" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/brand1/480/280" alt="Logo mark" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Logo mark — primary lockup</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/brand2/360/280" data-caption="Colour palette application" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/brand2/360/280" alt="Colour palette" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Colour palette application</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/brand3/500/280" data-caption="Typography system" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/brand3/500/280" alt="Typography" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Typography system</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/brand4/420/280" data-caption="Print collateral suite" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/brand4/420/280" alt="Print collateral" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Print collateral suite</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/brand5/460/280" data-caption="Environmental signage" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/brand5/460/280" alt="Signage" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Environmental signage</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/brand6/380/280" data-caption="Brand book cover" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/brand6/380/280" alt="Brand book" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Brand book cover</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Project 2 -->
+    <article class="project" id="project-2">
+      <div class="project-header" onclick="toggleProject(this)">
+        <span class="project-number">02</span>
+        <h2 class="project-title">Product Launch Campaign</h2>
+        <span class="project-year">2024</span>
+        <div class="project-tags">
+          <span class="tag">Campaign</span>
+          <span class="tag">Art Direction</span>
+          <span class="tag">Film</span>
+        </div>
+        <div class="toggle-arrow">
+          <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+            <path d="M1 1L7 7L13 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="project-ghost-num">02</span>
+      </div>
+      <div class="project-body">
+        <div class="project-body-inner">
+          <p class="project-description">
+            360° campaign for a skincare brand's hero product launch — reaching 2.4M across digital,
+            OOH, and editorial placements. Art directed the <strong>hero film</strong>, print campaign,
+            and all social assets. Shot on 16mm for a warmth and texture that set it apart from competitors.
+          </p>
+          <div class="media-scroll-wrapper">
+            <div class="media-fade media-fade-left"></div>
+            <div class="media-fade media-fade-right"></div>
+            <div class="media-scroll" onscroll="updateFades(this)">
+              <div class="media-item" data-src="https://picsum.photos/seed/camp1/480/280" data-caption="Campaign key visual" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/camp1/480/280" alt="Key visual" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Campaign key visual</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/camp2/360/280" data-caption="OOH billboard" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/camp2/360/280" alt="Billboard" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">OOH billboard</div>
+              </div>
+              <div class="media-item is-video" data-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" data-caption="Hero film — 60s cut" data-type="video" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/camp-vid1/500/280" alt="Hero film" loading="lazy" />
+                <div class="media-item-overlay">
+                  <svg class="play-icon" width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    <circle cx="20" cy="20" r="19" stroke="currentColor" stroke-width="1.2"/>
+                    <polygon points="16,13 30,20 16,27" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="media-caption">Hero film — 60s cut</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/camp3/440/280" data-caption="Editorial spread" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/camp3/440/280" alt="Editorial" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Editorial spread</div>
+              </div>
+              <div class="media-item is-video" data-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" data-caption="Social cut — 15s" data-type="video" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/camp-vid2/380/280" alt="Social cut" loading="lazy" />
+                <div class="media-item-overlay">
+                  <svg class="play-icon" width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    <circle cx="20" cy="20" r="19" stroke="currentColor" stroke-width="1.2"/>
+                    <polygon points="16,13 30,20 16,27" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="media-caption">Social cut — 15s</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Project 3 -->
+    <article class="project" id="project-3">
+      <div class="project-header" onclick="toggleProject(this)">
+        <span class="project-number">03</span>
+        <h2 class="project-title">UI/UX Redesign</h2>
+        <span class="project-year">2023</span>
+        <div class="project-tags">
+          <span class="tag">Product Design</span>
+          <span class="tag">UX</span>
+          <span class="tag">Systems</span>
+        </div>
+        <div class="toggle-arrow">
+          <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+            <path d="M1 1L7 7L13 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="project-ghost-num">03</span>
+      </div>
+      <div class="project-body">
+        <div class="project-body-inner">
+          <p class="project-description">
+            End-to-end redesign of a fintech platform serving 80k active users. Led a three-person
+            design team through discovery, systems design, and <strong>high-fidelity prototyping</strong>.
+            The redesign reduced onboarding drop-off by 38% and increased feature adoption across core flows.
+          </p>
+          <div class="media-scroll-wrapper">
+            <div class="media-fade media-fade-left"></div>
+            <div class="media-fade media-fade-right"></div>
+            <div class="media-scroll" onscroll="updateFades(this)">
+              <div class="media-item" data-src="https://picsum.photos/seed/ui1/500/280" data-caption="Dashboard — redesigned" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/ui1/500/280" alt="Dashboard" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Dashboard — redesigned</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/ui2/380/280" data-caption="Onboarding flow" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/ui2/380/280" alt="Onboarding" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Onboarding flow</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/ui3/460/280" data-caption="Component library" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/ui3/460/280" alt="Components" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Component library</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/ui4/420/280" data-caption="Mobile views" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/ui4/420/280" alt="Mobile" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Mobile views</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/ui5/400/280" data-caption="Before / after comparison" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/ui5/400/280" alt="Before after" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Before / after comparison</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/ui6/480/280" data-caption="Design system documentation" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/ui6/480/280" alt="Design system" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Design system documentation</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Project 4 -->
+    <article class="project" id="project-4">
+      <div class="project-header" onclick="toggleProject(this)">
+        <span class="project-number">04</span>
+        <h2 class="project-title">Documentary Short</h2>
+        <span class="project-year">2023</span>
+        <div class="project-tags">
+          <span class="tag">Film</span>
+          <span class="tag">Direction</span>
+          <span class="tag">Post</span>
+        </div>
+        <div class="toggle-arrow">
+          <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+            <path d="M1 1L7 7L13 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="project-ghost-num">04</span>
+      </div>
+      <div class="project-body">
+        <div class="project-body-inner">
+          <p class="project-description">
+            18-minute documentary following three independent ceramicists across rural Japan. Written,
+            directed, and edited over 6 weeks. Selected for the <strong>London Short Film Festival 2023</strong>
+            and distributed via Nowness. Scored using field recordings captured on location.
+          </p>
+          <div class="media-scroll-wrapper">
+            <div class="media-fade media-fade-left"></div>
+            <div class="media-fade media-fade-right"></div>
+            <div class="media-scroll" onscroll="updateFades(this)">
+              <div class="media-item is-video" data-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" data-caption="Documentary trailer — 2:30" data-type="video" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/doc-vid1/500/280" alt="Trailer" loading="lazy" />
+                <div class="media-item-overlay">
+                  <svg class="play-icon" width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    <circle cx="20" cy="20" r="19" stroke="currentColor" stroke-width="1.2"/>
+                    <polygon points="16,13 30,20 16,27" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="media-caption">Documentary trailer — 2:30</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/doc1/380/280" data-caption="Still — Act I, Kiln firing" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/doc1/380/280" alt="Still 1" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Still — Act I, Kiln firing</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/doc2/460/280" data-caption="Still — Act II, Market" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/doc2/460/280" alt="Still 2" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Still — Act II, Market</div>
+              </div>
+              <div class="media-item is-video" data-src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" data-caption="Extended scene — 4:15" data-type="video" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/doc-vid2/420/280" alt="Scene" loading="lazy" />
+                <div class="media-item-overlay">
+                  <svg class="play-icon" width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    <circle cx="20" cy="20" r="19" stroke="currentColor" stroke-width="1.2"/>
+                    <polygon points="16,13 30,20 16,27" fill="currentColor"/>
+                  </svg>
+                </div>
+                <div class="media-caption">Extended scene — 4:15</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/doc3/400/280" data-caption="Still — Act III, Reflection" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/doc3/400/280" alt="Still 3" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Still — Act III, Reflection</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <!-- Project 5 -->
+    <article class="project" id="project-5">
+      <div class="project-header" onclick="toggleProject(this)">
+        <span class="project-number">05</span>
+        <h2 class="project-title">Architecture Visualization</h2>
+        <span class="project-year">2022</span>
+        <div class="project-tags">
+          <span class="tag">CGI</span>
+          <span class="tag">Viz</span>
+          <span class="tag">Spatial</span>
+        </div>
+        <div class="toggle-arrow">
+          <svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+            <path d="M1 1L7 7L13 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="project-ghost-num">05</span>
+      </div>
+      <div class="project-body">
+        <div class="project-body-inner">
+          <p class="project-description">
+            Photorealistic visualizations for a 14-storey residential tower in East London, created for
+            planning approval and pre-sales. The project involved extensive <strong>lighting simulation</strong>,
+            atmospheric rendering, and integration of live photography for ground-level scenes.
+          </p>
+          <div class="media-scroll-wrapper">
+            <div class="media-fade media-fade-left"></div>
+            <div class="media-fade media-fade-right"></div>
+            <div class="media-scroll" onscroll="updateFades(this)">
+              <div class="media-item" data-src="https://picsum.photos/seed/arch1/500/280" data-caption="Exterior — golden hour" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/arch1/500/280" alt="Exterior" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Exterior — golden hour</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/arch2/420/280" data-caption="Lobby interior" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/arch2/420/280" alt="Lobby" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Lobby interior</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/arch3/380/280" data-caption="Penthouse — living room" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/arch3/380/280" alt="Penthouse" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Penthouse — living room</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/arch4/460/280" data-caption="Aerial overview" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/arch4/460/280" alt="Aerial" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Aerial overview</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/arch5/400/280" data-caption="Street level — dusk" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/arch5/400/280" alt="Street" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Street level — dusk</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/arch6/440/280" data-caption="Bedroom — natural light" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/arch6/440/280" alt="Bedroom" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Bedroom — natural light</div>
+              </div>
+              <div class="media-item" data-src="https://picsum.photos/seed/arch7/480/280" data-caption="Rooftop terrace" data-type="image" onclick="openLightbox(this)">
+                <img src="https://picsum.photos/seed/arch7/480/280" alt="Rooftop" loading="lazy" />
+                <div class="media-item-overlay"></div>
+                <div class="media-caption">Rooftop terrace</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- ── Lightbox ── -->
+  <div id="lightbox" role="dialog" aria-modal="true" aria-label="Media viewer">
+    <div id="lb-top">
+      <span id="lb-counter"></span>
+      <button id="lb-close" onclick="closeLightbox()">Close ✕</button>
+    </div>
+    <button class="lb-nav" id="lb-prev" onclick="navLightbox(-1)" aria-label="Previous">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M10 2L4 8L10 14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div id="lb-media-wrap">
+      <img id="lb-img" src="" alt="" />
+      <video id="lb-video" controls playsinline></video>
+    </div>
+    <button class="lb-nav" id="lb-next" onclick="navLightbox(1)" aria-label="Next">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <path d="M6 2L12 8L6 14" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div id="lb-caption"></div>
+  </div>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <span class="footer-name">James Chorley</span>
+    <span class="footer-copy">&copy; 2025 — All rights reserved</span>
+  </footer>
+
+  <script>
+    /* ── Cursor ──────────────────────────────────────────────────── */
+    const dot  = document.getElementById('cursor-dot');
+    const ring = document.getElementById('cursor-ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+
+    document.addEventListener('mousemove', e => {
+      mx = e.clientX; my = e.clientY;
+      dot.style.left = mx + 'px';
+      dot.style.top  = my + 'px';
+    });
+
+    (function animCursor() {
+      rx += (mx - rx) * 0.12;
+      ry += (my - ry) * 0.12;
+      ring.style.left = rx + 'px';
+      ring.style.top  = ry + 'px';
+      requestAnimationFrame(animCursor);
+    })();
+
+    /* ── Header scroll state ─────────────────────────────────────── */
+    const header = document.getElementById('site-header');
+    window.addEventListener('scroll', () => {
+      header.classList.toggle('scrolled', window.scrollY > 40);
+    }, { passive: true });
+
+    /* ── Project toggle ──────────────────────────────────────────── */
+    function toggleProject(headerEl) {
+      const project = headerEl.closest('.project');
+      const body    = project.querySelector('.project-body');
+      const isOpen  = project.classList.contains('expanded');
+
+      // Close all others
+      document.querySelectorAll('.project.expanded').forEach(p => {
+        if (p !== project) {
+          p.classList.remove('expanded');
+          p.querySelector('.project-body').style.maxHeight = '0';
+          resetMediaItems(p);
+        }
+      });
+
+      if (isOpen) {
+        project.classList.remove('expanded');
+        body.style.maxHeight = '0';
+        resetMediaItems(project);
+      } else {
+        project.classList.add('expanded');
+        body.style.maxHeight = body.scrollHeight + 'px';
+        animateMediaItems(project);
+        // Update max-height once images load
+        setTimeout(() => {
+          if (project.classList.contains('expanded')) {
+            body.style.maxHeight = body.scrollHeight + 'px';
+          }
+        }, 100);
+      }
+    }
+
+    function animateMediaItems(project) {
+      const items = project.querySelectorAll('.media-item');
+      items.forEach((item, i) => {
+        item.style.transitionDelay = (i * 60) + 'ms';
+        setTimeout(() => item.classList.add('visible'), 10);
+      });
+    }
+
+    function resetMediaItems(project) {
+      const items = project.querySelectorAll('.media-item');
+      items.forEach(item => {
+        item.classList.remove('visible');
+        item.style.transitionDelay = '0ms';
+      });
+    }
+
+    /* ── Fade overlays on scroll ─────────────────────────────────── */
+    function updateFades(scrollEl) {
+      const wrapper  = scrollEl.closest('.media-scroll-wrapper');
+      const fadeL    = wrapper.querySelector('.media-fade-left');
+      const fadeR    = wrapper.querySelector('.media-fade-right');
+      const atStart  = scrollEl.scrollLeft < 8;
+      const atEnd    = scrollEl.scrollLeft >= scrollEl.scrollWidth - scrollEl.clientWidth - 8;
+      fadeL.style.opacity = atStart ? '0' : '1';
+      fadeR.style.opacity = atEnd   ? '0' : '1';
+    }
+
+    /* ── Lightbox ────────────────────────────────────────────────── */
+    const lb     = document.getElementById('lightbox');
+    const lbImg  = document.getElementById('lb-img');
+    const lbVid  = document.getElementById('lb-video');
+    const lbCap  = document.getElementById('lb-caption');
+    const lbCtr  = document.getElementById('lb-counter');
+
+    let lbItems  = [];
+    let lbIndex  = 0;
+    let lbProject = null;
+
+    function openLightbox(itemEl) {
+      // Collect all items in this project's media strip
+      lbProject = itemEl.closest('.project');
+      lbItems   = Array.from(lbProject.querySelectorAll('.media-item'));
+      lbIndex   = lbItems.indexOf(itemEl);
+      showLbItem(lbIndex);
+      lb.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function showLbItem(idx) {
+      const item = lbItems[idx];
+      const src  = item.dataset.src;
+      const cap  = item.dataset.caption || '';
+      const type = item.dataset.type;
+      lbCtr.textContent = (idx + 1) + ' / ' + lbItems.length;
+      lbCap.textContent = cap;
+
+      // Stop current video
+      lbVid.pause();
+      lbVid.src = '';
+      lb.classList.remove('showing-video');
+
+      if (type === 'video') {
+        lb.classList.add('showing-video');
+        lbVid.src = src;
+        lbVid.load();
+        lbVid.play().catch(() => {});
+      } else {
+        lbImg.src = src;
+      }
+    }
+
+    function navLightbox(dir) {
+      lbIndex = (lbIndex + dir + lbItems.length) % lbItems.length;
+      showLbItem(lbIndex);
+    }
+
+    function closeLightbox() {
+      lb.classList.remove('open');
+      lbVid.pause();
+      lbVid.src = '';
+      document.body.style.overflow = '';
+    }
+
+    document.addEventListener('keydown', e => {
+      if (!lb.classList.contains('open')) return;
+      if (e.key === 'ArrowLeft')  navLightbox(-1);
+      if (e.key === 'ArrowRight') navLightbox(1);
+      if (e.key === 'Escape')     closeLightbox();
+    });
+
+    lb.addEventListener('click', e => {
+      if (e.target === lb) closeLightbox();
+    });
+
+    /* ── Auto-expand first project ───────────────────────────────── */
+    (function init() {
+      const first = document.querySelector('.project');
+      if (first) {
+        first.classList.add('expanded');
+        const body = first.querySelector('.project-body');
+        // Use a small delay so DOM is ready for scrollHeight
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            body.style.maxHeight = body.scrollHeight + 'px';
+            animateMediaItems(first);
+            setTimeout(() => {
+              if (first.classList.contains('expanded')) {
+                body.style.maxHeight = body.scrollHeight + 'px';
+              }
+            }, 600);
+          });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>
