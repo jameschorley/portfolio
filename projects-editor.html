@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Projects Editor — Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #080808;
+      --surface: #111111;
+      --surface2: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #f0ede6;
+      --text-dim: #7a7570;
+      --gold: #c9a96e;
+      --gold-dim: rgba(201,169,110,0.12);
+      --red: #c96e6e;
+      --red-dim: rgba(201,110,110,0.12);
+      --green: #6ec98a;
+      --sidebar-w: 240px;
+      --header-h: 56px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Space Mono', monospace; font-size: 13px; overflow: hidden; }
+
+    /* ── Browser error ── */
+    #browser-error { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 9999; place-items: center; text-align: center; padding: 2rem; }
+    #browser-error.visible { display: grid; }
+    #browser-error h2 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 2rem; color: var(--gold); margin-bottom: 1rem; }
+    #browser-error p { color: var(--text-dim); line-height: 1.8; max-width: 460px; }
+    #browser-error code { background: var(--surface2); padding: 0.1em 0.4em; border-radius: 3px; }
+
+    /* ── Layout ── */
+    #app { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ── Header ── */
+    #editor-header { flex: 0 0 var(--header-h); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; border-bottom: 1px solid var(--border); background: var(--surface); z-index: 10; }
+    #editor-header h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.2rem; font-weight: 400; letter-spacing: 0.05em; color: var(--gold); }
+    .header-actions { display: flex; gap: 0.75rem; align-items: center; }
+
+    /* ── Status banner ── */
+    #status-banner { flex: 0 0 auto; padding: 0.55rem 1.5rem; font-size: 12px; display: none; }
+    #status-banner.visible { display: block; }
+    #status-banner.info { background: var(--gold-dim); color: var(--gold); border-bottom: 1px solid rgba(201,169,110,0.2); }
+    #status-banner.error { background: var(--red-dim); color: var(--red); border-bottom: 1px solid rgba(201,110,110,0.2); }
+    #status-banner.success { background: rgba(110,201,138,0.08); color: var(--green); border-bottom: 1px solid rgba(110,201,138,0.2); }
+
+    /* ── Body ── */
+    #editor-body { flex: 1; display: flex; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    #sidebar { flex: 0 0 var(--sidebar-w); border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--surface); overflow: hidden; }
+    #project-list { flex: 1; overflow-y: auto; padding: 0.4rem 0; }
+    .sidebar-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.75rem; cursor: pointer; border-left: 2px solid transparent; transition: background 0.12s, border-color 0.12s; user-select: none; }
+    .sidebar-item:hover { background: var(--surface2); }
+    .sidebar-item.active { border-left-color: var(--gold); background: var(--gold-dim); }
+    .sidebar-num { font-size: 10px; color: var(--text-dim); width: 18px; flex-shrink: 0; }
+    .sidebar-title { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
+    .sidebar-reorder { display: flex; flex-direction: column; gap: 1px; flex-shrink: 0; }
+    .sidebar-reorder button { background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 1px 3px; font-size: 9px; line-height: 1; border-radius: 2px; }
+    .sidebar-reorder button:hover { color: var(--gold); background: var(--gold-dim); }
+    .sidebar-reorder button:disabled { opacity: 0.2; cursor: not-allowed; }
+    #sidebar-footer { border-top: 1px solid var(--border); padding: 0.75rem; }
+
+    /* ── Main panel ── */
+    #main-panel { flex: 1; overflow-y: auto; padding: 2rem 2.5rem; display: flex; flex-direction: column; gap: 2rem; }
+    #no-folder-msg, #no-project-msg { margin: auto; text-align: center; color: var(--text-dim); line-height: 1.9; }
+    #no-folder-msg .hint { margin-top: 1.5rem; font-size: 11px; opacity: 0.5; }
+
+    /* ── Form fields ── */
+    .field-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 0.4rem; display: block; }
+    .field-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 13px; padding: 0.55rem 0.75rem; transition: border-color 0.15s; outline: none; }
+    .field-input:focus { border-color: var(--gold); }
+    textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.6; }
+
+    /* ── Section header ── */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+    .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-dim); }
+
+    /* ── Media grid ── */
+    #media-grid { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .media-card { width: 160px; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; overflow: hidden; position: relative; flex-shrink: 0; transition: border-color 0.12s; }
+    .media-card:hover { border-color: var(--text-dim); }
+    .media-card-thumb { width: 100%; height: 100px; object-fit: cover; display: block; background: var(--surface2); }
+    .media-card-nothumb { width: 100%; height: 100px; background: var(--surface2); display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 1.5rem; }
+    .media-card-play { position: absolute; top: 28px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.75); pointer-events: none; font-size: 22px; }
+    .media-card-body { padding: 0.4rem 0.5rem 0.5rem; }
+    .media-card-caption { font-size: 11px; color: var(--text); background: none; border: none; border-bottom: 1px solid transparent; width: 100%; font-family: 'Space Mono', monospace; outline: none; padding: 2px 0; }
+    .media-card-caption:focus { border-bottom-color: var(--gold); }
+    .media-card-type { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; }
+    .media-card-del { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.65); border: none; color: white; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 13px; line-height: 1; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s, background 0.12s; }
+    .media-card:hover .media-card-del { opacity: 1; }
+    .media-card-del:hover { background: var(--red); }
+
+    /* ── Add media buttons ── */
+    .add-media-btn { width: 160px; height: 140px; background: none; border: 1px dashed var(--border); border-radius: 4px; color: var(--text-dim); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem; font-family: 'Space Mono', monospace; font-size: 11px; transition: border-color 0.15s, color 0.15s; flex-shrink: 0; }
+    .add-media-btn:hover { border-color: var(--gold); color: var(--gold); }
+    .add-media-btn .add-icon { font-size: 1.3rem; }
+
+    /* ── Delete zone ── */
+    #delete-zone { border-top: 1px solid var(--border); padding-top: 1.5rem; display: flex; align-items: center; justify-content: space-between; }
+    #delete-zone p { color: var(--text-dim); font-size: 12px; }
+
+    /* ── Buttons ── */
+    .btn { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); font-family: 'Space Mono', monospace; font-size: 12px; cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap; }
+    .btn:hover { border-color: var(--gold); color: var(--gold); }
+    .btn:disabled { opacity: 0.3; cursor: not-allowed; border-color: var(--border) !important; color: var(--text-dim) !important; }
+    .btn-primary { background: var(--gold); border-color: var(--gold); color: #080808; font-weight: 700; }
+    .btn-primary:hover { background: #d4b87a; border-color: #d4b87a; color: #080808; }
+    .btn-primary:disabled { background: none; }
+    .btn-danger { border-color: var(--red); color: var(--red); }
+    .btn-danger:hover { background: var(--red-dim); }
+    .btn-full { width: 100%; }
+    .btn-sm { padding: 0.3rem 0.65rem; font-size: 11px; }
+    #btn-save.dirty { border-color: var(--gold); color: var(--gold); animation: pulse 2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(201,169,110,0.35); } 50% { box-shadow: 0 0 0 5px rgba(201,169,110,0); } }
+
+    /* ── Modal ── */
+    .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; place-items: center; }
+    .modal-backdrop.visible { display: grid; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; width: 420px; max-width: 92vw; }
+    .modal h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.3rem; font-weight: 400; margin-bottom: 1rem; color: var(--gold); }
+    .modal-body { display: flex; flex-direction: column; gap: 1rem; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
+
+    /* ── Saving overlay ── */
+    #saving-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; place-items: center; font-size: 14px; color: var(--gold); letter-spacing: 0.1em; }
+    #saving-overlay.visible { display: grid; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+  </style>
+</head>
+<body>
+
+<!-- Browser compatibility check -->
+<div id="browser-error">
+  <div>
+    <h2>Chrome Required</h2>
+    <p>The Projects Editor uses the File System Access API (<code>showDirectoryPicker</code>), which requires Chrome 86+ or Edge 86+.<br><br>Open this file in Google Chrome to continue.</p>
+  </div>
+</div>
+
+<!-- Saving overlay -->
+<div id="saving-overlay">Saving&hellip;</div>
+
+<!-- App -->
+<div id="app">
+
+  <header id="editor-header">
+    <h1>Projects Editor</h1>
+    <div class="header-actions">
+      <button class="btn" id="btn-open" onclick="openFolder()">Open Portfolio Folder</button>
+      <button class="btn btn-primary" id="btn-save" onclick="saveAll()" disabled>Save to index.html</button>
+    </div>
+  </header>
+
+  <div id="status-banner"></div>
+
+  <div id="editor-body">
+
+    <aside id="sidebar">
+      <div id="project-list"></div>
+      <div id="sidebar-footer">
+        <button class="btn btn-full" id="btn-add" onclick="addProject()" disabled>+ Add Project</button>
+      </div>
+    </aside>
+
+    <main id="main-panel">
+
+      <div id="no-folder-msg">
+        <p>Open your portfolio folder to get started.</p>
+        <p style="margin-top:0.5rem;font-size:12px">Click <strong style="color:var(--text)">Open Portfolio Folder</strong> above<br>and select the folder containing index.html.</p>
+        <p class="hint">Requires Chrome 86+ · File System Access API</p>
+      </div>
+
+      <div id="no-project-msg" style="display:none">
+        <p>Select a project from the sidebar,<br>or click <strong style="color:var(--text)">+ Add Project</strong>.</p>
+      </div>
+
+      <div id="project-editor" style="display:none">
+
+        <div>
+          <label class="field-label" for="field-title">Project Title</label>
+          <input class="field-input" id="field-title" type="text" placeholder="e.g. Brand Identity System" oninput="onTitleChange(this.value)" />
+        </div>
+
+        <div>
+          <label class="field-label" for="field-desc">
+            Description
+            <span style="color:var(--text-dim);font-size:10px;margin-left:0.5rem">use **word** for bold</span>
+          </label>
+          <textarea class="field-input" id="field-desc" rows="5" placeholder="Describe this project…" oninput="onDescChange(this.value)"></textarea>
+        </div>
+
+        <div>
+          <div class="section-header">
+            <span class="section-title" id="media-count-label">Media</span>
+          </div>
+          <div id="media-grid"></div>
+        </div>
+
+        <div id="delete-zone">
+          <p>Permanently remove this project from index.html</p>
+          <button class="btn btn-danger btn-sm" onclick="confirmDeleteProject()">Delete Project</button>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal-backdrop" id="confirm-modal">
+  <div class="modal">
+    <h3 id="confirm-title">Are you sure?</h3>
+    <p id="confirm-msg" style="color:var(--text-dim);font-size:12px;line-height:1.75"></p>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeConfirm()">Cancel</button>
+      <button class="btn btn-danger" id="confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- URL media modal -->
+<div class="modal-backdrop" id="url-modal">
+  <div class="modal">
+    <h3>Add External Media</h3>
+    <div class="modal-body">
+      <div>
+        <label class="field-label" for="url-src">URL</label>
+        <input class="field-input" id="url-src" type="url" placeholder="https://…" />
+      </div>
+      <div>
+        <label class="field-label" for="url-type">Type</label>
+        <select class="field-input" id="url-type" onchange="onUrlTypeChange()">
+          <option value="image">Image</option>
+          <option value="video">Video</option>
+        </select>
+      </div>
+      <div id="url-thumb-row" style="display:none">
+        <label class="field-label" for="url-thumb">Thumbnail URL (optional)</label>
+        <input class="field-input" id="url-thumb" type="url" placeholder="https://…" />
+      </div>
+      <div>
+        <label class="field-label" for="url-caption">Caption</label>
+        <input class="field-input" id="url-caption" type="text" placeholder="Describe this media…" />
+      </div>
+      <p id="url-error" style="color:var(--red);font-size:11px;display:none"></p>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeUrlModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmAddUrl()">Add</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ── SVG constants ── */
+const TOGGLE_ARROW_SVG = `<svg width="14" height="8" viewBox="0 0 14 8" fill="none">
+            <path d="M1 1L7 7L13 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>`;
+
+const PLAY_ICON_SVG = `<svg class="play-icon" width="40" height="40" viewBox="0 0 40 40" fill="none">
+                    <circle cx="20" cy="20" r="19" stroke="currentColor" stroke-width="1.2"/>
+                    <polygon points="16,13 30,20 16,27" fill="currentColor"/>
+                  </svg>`;
+
+/* ── State ── */
+const state = {
+  dirHandle: null,
+  projectsDirHandle: null,
+  projects: [],
+  activeProjectId: null,
+  pendingWrites: new Map(), // "slug/filename" → File
+  dirty: false,
+};
+
+/* ── Utilities ── */
+function escAttr(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escText(s) {
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function mdToHtml(s) {
+  return escText(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+}
+function htmlToMd(html) {
+  return html
+    .replace(/<strong[^>]*>([\s\S]*?)<\/strong>/gi, '**$1**')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'")
+    .replace(/<[^>]+>/g, '')
+    .trim();
+}
+function makeSlug(number, title) {
+  const num = String(number).padStart(2, '0');
+  const slug = title.toLowerCase()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '') || 'untitled';
+  return `${num}-${slug}`;
+}
+function makeId(prefix = 'p') {
+  return `${prefix}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/* ── File system helpers ── */
+async function readText(dirHandle, filename) {
+  const fh = await dirHandle.getFileHandle(filename);
+  return (await fh.getFile()).text();
+}
+async function writeText(dirHandle, filename, content) {
+  const fh = await dirHandle.getFileHandle(filename, { create: true });
+  const w = await fh.createWritable();
+  await w.write(content);
+  await w.close();
+}
+async function writeData(dirHandle, filename, data) {
+  const fh = await dirHandle.getFileHandle(filename, { create: true });
+  const w = await fh.createWritable();
+  await w.write(data);
+  await w.close();
+}
+async function dirExists(parent, name) {
+  try { await parent.getDirectoryHandle(name); return true; } catch { return false; }
+}
+
+/* ── Open folder ── */
+async function openFolder() {
+  try {
+    state.dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    await loadOrMigrate();
+  } catch (err) {
+    if (err.name !== 'AbortError') showBanner('Error opening folder: ' + err.message, 'error');
+  }
+}
+
+async function loadOrMigrate() {
+  try { await state.dirHandle.getFileHandle('index.html'); }
+  catch {
+    showBanner('index.html not found — please open the portfolio root folder.', 'error');
+    state.dirHandle = null;
+    return;
+  }
+
+  const hasProjDir = await dirExists(state.dirHandle, 'projects');
+  if (hasProjDir) {
+    state.projectsDirHandle = await state.dirHandle.getDirectoryHandle('projects');
+    let hasSubs = false;
+    for await (const [name] of state.projectsDirHandle.entries()) {
+      if (/^\d{2}-/.test(name)) { hasSubs = true; break; }
+    }
+    if (hasSubs) {
+      await loadFromDisk();
+    } else {
+      await runMigration();
+    }
+  } else {
+    state.projectsDirHandle = await state.dirHandle.getDirectoryHandle('projects', { create: true });
+    await runMigration();
+  }
+
+  document.getElementById('btn-add').disabled = false;
+  renderSidebar();
+  if (state.projects.length > 0) {
+    setActive(state.projects[0].id);
+  } else {
+    showPanel('no-project');
+  }
+}
+
+/* ── Migration (parse index.html → create project.json files) ── */
+async function runMigration() {
+  try {
+    const html = await readText(state.dirHandle, 'index.html');
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const articles = doc.querySelectorAll('article.project');
+
+    state.projects = [];
+
+    for (const article of articles) {
+      const number = parseInt(article.querySelector('.project-number')?.textContent ?? '1');
+      const title = article.querySelector('.project-title')?.textContent?.trim() ?? 'Untitled';
+      const descEl = article.querySelector('.project-description');
+      const description = descEl ? htmlToMd(descEl.innerHTML) : '';
+      const slug = makeSlug(number, title);
+
+      const media = [];
+      for (const itemEl of article.querySelectorAll('.media-item')) {
+        const type = itemEl.dataset.type ?? 'image';
+        const src = itemEl.dataset.src ?? '';
+        const caption = itemEl.dataset.caption ?? '';
+        const imgEl = itemEl.querySelector('img');
+        const thumbSrc = (type === 'video' && imgEl) ? (imgEl.getAttribute('src') || null) : null;
+        media.push({ id: makeId('m'), filename: null, caption, type, src: src || null, thumbSrc });
+      }
+
+      const project = { id: makeId('p'), number, slug, oldSlug: null, title, description, media };
+      state.projects.push(project);
+
+      const projDir = await state.projectsDirHandle.getDirectoryHandle(slug, { create: true });
+      await writeProjectJson(projDir, project);
+    }
+
+    const n = state.projects.length;
+    showBanner(`Portfolio loaded — ${n} project${n !== 1 ? 's' : ''} found`, 'info');
+  } catch (err) {
+    showBanner('Migration error: ' + err.message, 'error');
+    console.error(err);
+  }
+}
+
+/* ── Load from disk ── */
+async function loadFromDisk() {
+  const entries = [];
+  for await (const [name, handle] of state.projectsDirHandle.entries()) {
+    if (handle.kind === 'directory' && /^\d{2}-/.test(name)) entries.push([name, handle]);
+  }
+  entries.sort((a, b) => a[0].localeCompare(b[0]));
+
+  state.projects = [];
+  for (const [name, handle] of entries) {
+    try {
+      const data = JSON.parse(await readText(handle, 'project.json'));
+      state.projects.push({
+        id: makeId('p'),
+        number: data.number ?? parseInt(name),
+        slug: data.slug ?? name,
+        oldSlug: null,
+        title: data.title ?? 'Untitled',
+        description: data.description ?? '',
+        media: (data.media ?? []).map(m => ({ ...m, id: m.id ?? makeId('m') })),
+      });
+    } catch (err) {
+      console.warn(`Skipping ${name}:`, err.message);
+    }
+  }
+
+  const n = state.projects.length;
+  showBanner(`Loaded ${n} project${n !== 1 ? 's' : ''}`, 'info');
+}
+
+/* ── Save all ── */
+async function saveAll() {
+  if (!state.dirHandle) return;
+  document.getElementById('saving-overlay').classList.add('visible');
+  try {
+    for (const project of state.projects) await saveProject(project);
+    await regenerateIndexHtml();
+    state.dirty = false;
+    state.pendingWrites.clear();
+    updateSaveBtn();
+    renderSidebar();
+    showBanner('Saved successfully', 'success');
+  } catch (err) {
+    showBanner('Save error: ' + err.message, 'error');
+    console.error(err);
+  } finally {
+    document.getElementById('saving-overlay').classList.remove('visible');
+  }
+}
+
+async function saveProject(project) {
+  const projDir = await state.projectsDirHandle.getDirectoryHandle(project.slug, { create: true });
+
+  // Handle slug change — copy files from old folder, then delete old folder
+  if (project.oldSlug && project.oldSlug !== project.slug) {
+    try {
+      const oldDir = await state.projectsDirHandle.getDirectoryHandle(project.oldSlug);
+      for await (const [fname, fhandle] of oldDir.entries()) {
+        if (fhandle.kind === 'file' && fname !== 'project.json') {
+          const key = `${project.slug}/${fname}`;
+          if (!state.pendingWrites.has(key)) {
+            await writeData(projDir, fname, await fhandle.getFile());
+          }
+        }
+      }
+      try { await state.projectsDirHandle.removeEntry(project.oldSlug, { recursive: true }); } catch {}
+    } catch {}
+    project.oldSlug = null;
+  }
+
+  // Write pending media files for this project
+  for (const [key, file] of state.pendingWrites) {
+    const slash = key.indexOf('/');
+    const slug = key.slice(0, slash);
+    const filename = key.slice(slash + 1);
+    if (slug === project.slug) await writeData(projDir, filename, file);
+  }
+
+  await writeProjectJson(projDir, project);
+}
+
+async function writeProjectJson(dirHandle, project) {
+  await writeText(dirHandle, 'project.json', JSON.stringify({
+    number: project.number,
+    slug: project.slug,
+    title: project.title,
+    description: project.description,
+    media: project.media,
+  }, null, 2));
+}
+
+/* ── Regenerate index.html ── */
+async function regenerateIndexHtml() {
+  let html = await readText(state.dirHandle, 'index.html');
+
+  const startTag = '<section id="projects">';
+  const endTag = '</section>';
+  const start = html.indexOf(startTag);
+  if (start === -1) throw new Error('Cannot find <section id="projects"> in index.html');
+
+  const end = html.indexOf(endTag, start) + endTag.length;
+  if (end < endTag.length) throw new Error('Cannot find closing </section> for projects section');
+
+  html = html.slice(0, start) + buildProjectsHtml(state.projects) + html.slice(end);
+  await writeText(state.dirHandle, 'index.html', html);
+}
+
+/* ── HTML generation ── */
+function buildProjectsHtml(projects) {
+  return '<section id="projects">\n\n'
+    + projects.map(buildProjectHtml).join('\n')
+    + '\n  </section>';
+}
+
+function buildProjectHtml(p) {
+  const num = String(p.number).padStart(2, '0');
+  const descHtml = mdToHtml(p.description);
+  const mediaHtml = p.media.map(m => buildMediaItemHtml(m, p.slug)).join('\n');
+
+  return `    <!-- Project ${p.number} -->
+    <article class="project" id="project-${p.number}">
+      <div class="project-header" onclick="toggleProject(this)">
+        <span class="project-number">${num}</span>
+        <h2 class="project-title">${escText(p.title)}</h2>
+        <div class="toggle-arrow">
+          ${TOGGLE_ARROW_SVG}
+        </div>
+      </div>
+      <div class="project-body">
+        <div class="project-body-inner">
+          <p class="project-description">
+            ${descHtml}
+          </p>
+          <div class="media-scroll-wrapper">
+            <div class="media-fade media-fade-left"></div>
+            <div class="media-fade media-fade-right"></div>
+            <div class="media-scroll" onscroll="updateFades(this)">
+${mediaHtml}
+            </div>
+          </div>
+        </div>
+      </div>
+    </article>`;
+}
+
+function buildMediaItemHtml(m, slug) {
+  const src = m.src ?? `projects/${slug}/${m.filename}`;
+  const isVideo = m.type === 'video';
+  const cssClass = isVideo ? 'media-item is-video' : 'media-item';
+  const thumbSrc = isVideo ? (m.thumbSrc || src) : src;
+  const cap = escAttr(m.caption);
+  const capText = escText(m.caption);
+
+  const overlayInner = isVideo
+    ? `\n                  ${PLAY_ICON_SVG}`
+    : '';
+
+  return `              <div class="${cssClass}" data-src="${escAttr(src)}" data-caption="${cap}" data-type="${m.type}" onclick="openLightbox(this)">
+                <img src="${escAttr(thumbSrc)}" alt="${cap}" loading="lazy" />
+                <div class="media-item-overlay">${overlayInner}
+                </div>
+                <div class="media-caption">${capText}</div>
+              </div>`;
+}
+
+/* ── Media management ── */
+function dedupeFilename(project, filename) {
+  const names = project.media.filter(m => m.filename).map(m => m.filename);
+  if (!names.includes(filename)) return filename;
+  const dot = filename.lastIndexOf('.');
+  const base = dot >= 0 ? filename.slice(0, dot) : filename;
+  const ext = dot >= 0 ? filename.slice(dot) : '';
+  let n = 2;
+  while (names.includes(`${base}-${n}${ext}`)) n++;
+  return `${base}-${n}${ext}`;
+}
+
+function addLocalMedia(type) {
+  const project = getActive();
+  if (!project) return;
+
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.multiple = true;
+  input.accept = type === 'image' ? 'image/*' : 'video/*';
+
+  input.onchange = () => {
+    const files = Array.from(input.files || []);
+    if (!files.length) return;
+    for (const file of files) {
+      const filename = dedupeFilename(project, file.name);
+      project.media.push({
+        id: makeId('m'),
+        filename,
+        caption: filename.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' '),
+        type,
+        src: null,
+        thumbSrc: null,
+      });
+      state.pendingWrites.set(`${project.slug}/${filename}`, file);
+    }
+    setDirty();
+    renderMediaGrid(project);
+  };
+
+  input.click();
+}
+
+function showUrlModal() {
+  document.getElementById('url-src').value = '';
+  document.getElementById('url-type').value = 'image';
+  document.getElementById('url-thumb').value = '';
+  document.getElementById('url-caption').value = '';
+  document.getElementById('url-thumb-row').style.display = 'none';
+  document.getElementById('url-error').style.display = 'none';
+  document.getElementById('url-modal').classList.add('visible');
+  setTimeout(() => document.getElementById('url-src').focus(), 50);
+}
+
+function closeUrlModal() {
+  document.getElementById('url-modal').classList.remove('visible');
+}
+
+function onUrlTypeChange() {
+  const isVideo = document.getElementById('url-type').value === 'video';
+  document.getElementById('url-thumb-row').style.display = isVideo ? '' : 'none';
+}
+
+function confirmAddUrl() {
+  const project = getActive();
+  if (!project) return;
+
+  const src = document.getElementById('url-src').value.trim();
+  const type = document.getElementById('url-type').value;
+  const thumbSrc = document.getElementById('url-thumb').value.trim() || null;
+  const caption = document.getElementById('url-caption').value.trim();
+  const errEl = document.getElementById('url-error');
+
+  if (!src) {
+    errEl.textContent = 'Please enter a URL.';
+    errEl.style.display = '';
+    return;
+  }
+
+  project.media.push({
+    id: makeId('m'),
+    filename: null,
+    caption: caption || src,
+    type,
+    src,
+    thumbSrc: type === 'video' ? thumbSrc : null,
+  });
+
+  closeUrlModal();
+  setDirty();
+  renderMediaGrid(project);
+}
+
+function deleteMedia(projectId, mediaId) {
+  const project = state.projects.find(p => p.id === projectId);
+  if (!project) return;
+  const idx = project.media.findIndex(m => m.id === mediaId);
+  if (idx === -1) return;
+  const m = project.media[idx];
+  if (m.filename) state.pendingWrites.delete(`${project.slug}/${m.filename}`);
+  project.media.splice(idx, 1);
+  setDirty();
+  renderMediaGrid(project);
+}
+
+/* ── Project CRUD ── */
+function addProject() {
+  const number = state.projects.length > 0
+    ? Math.max(...state.projects.map(p => p.number)) + 1
+    : 1;
+  const title = 'New Project';
+  const project = {
+    id: makeId('p'), number,
+    slug: makeSlug(number, title),
+    oldSlug: null, title,
+    description: '', media: [],
+  };
+  state.projects.push(project);
+  setDirty();
+  renderSidebar();
+  setActive(project.id);
+}
+
+function confirmDeleteProject() {
+  const p = getActive();
+  if (!p) return;
+  showConfirm(
+    'Delete Project?',
+    `"${p.title}" will be removed from index.html on next save. The folder on disk will not be deleted automatically.`,
+    () => deleteProject(p.id)
+  );
+}
+
+function deleteProject(projectId) {
+  const idx = state.projects.findIndex(p => p.id === projectId);
+  if (idx === -1) return;
+  state.projects.splice(idx, 1);
+  renumberAll();
+  setDirty();
+  state.activeProjectId = null;
+  renderSidebar();
+  if (state.projects.length > 0) {
+    setActive(state.projects[Math.min(idx, state.projects.length - 1)].id);
+  } else {
+    showPanel('no-project');
+  }
+}
+
+function reorderProject(projectId, dir) {
+  const idx = state.projects.findIndex(p => p.id === projectId);
+  if (idx === -1) return;
+  const newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= state.projects.length) return;
+
+  // Track old slugs before renumber
+  [state.projects[idx], state.projects[newIdx]] = [state.projects[newIdx], state.projects[idx]];
+
+  // Mark both as potentially having changed slugs
+  state.projects[idx].oldSlug = state.projects[idx].oldSlug ?? state.projects[idx].slug;
+  state.projects[newIdx].oldSlug = state.projects[newIdx].oldSlug ?? state.projects[newIdx].slug;
+
+  renumberAll();
+  setDirty();
+  renderSidebar();
+}
+
+function renumberAll() {
+  state.projects.forEach((p, i) => {
+    const newNumber = i + 1;
+    const newSlug = makeSlug(newNumber, p.title);
+    if (newSlug !== p.slug) {
+      if (!p.oldSlug) p.oldSlug = p.slug;
+      // Update pendingWrites keys
+      for (const [key, file] of [...state.pendingWrites]) {
+        if (key.startsWith(p.slug + '/')) {
+          state.pendingWrites.delete(key);
+          state.pendingWrites.set(`${newSlug}/${key.slice(p.slug.length + 1)}`, file);
+        }
+      }
+    }
+    p.number = newNumber;
+    p.slug = newSlug;
+  });
+}
+
+/* ── Active project ── */
+function getActive() {
+  return state.projects.find(p => p.id === state.activeProjectId) ?? null;
+}
+
+function setActive(projectId) {
+  state.activeProjectId = projectId;
+  renderSidebar();
+  const project = getActive();
+  if (!project) { showPanel('no-project'); return; }
+  showPanel('editor');
+  document.getElementById('field-title').value = project.title;
+  document.getElementById('field-desc').value = project.description;
+  renderMediaGrid(project);
+}
+
+function onTitleChange(value) {
+  const project = getActive();
+  if (!project) return;
+  const newSlug = makeSlug(project.number, value);
+  if (newSlug !== project.slug) {
+    if (!project.oldSlug) project.oldSlug = project.slug;
+    for (const [key, file] of [...state.pendingWrites]) {
+      if (key.startsWith(project.slug + '/')) {
+        state.pendingWrites.delete(key);
+        state.pendingWrites.set(`${newSlug}/${key.slice(project.slug.length + 1)}`, file);
+      }
+    }
+    project.slug = newSlug;
+  }
+  project.title = value;
+  setDirty();
+  const el = document.querySelector(`.sidebar-item[data-id="${project.id}"] .sidebar-title`);
+  if (el) el.textContent = value || '(untitled)';
+}
+
+function onDescChange(value) {
+  const project = getActive();
+  if (!project) return;
+  project.description = value;
+  setDirty();
+}
+
+function onCaptionChange(projectId, mediaId, value) {
+  const project = state.projects.find(p => p.id === projectId);
+  if (!project) return;
+  const media = project.media.find(m => m.id === mediaId);
+  if (!media) return;
+  media.caption = value;
+  setDirty();
+}
+
+/* ── Render sidebar ── */
+function renderSidebar() {
+  const list = document.getElementById('project-list');
+  if (!state.projects.length) {
+    list.innerHTML = '<p style="padding:1rem;color:var(--text-dim);font-size:11px">No projects yet.</p>';
+    return;
+  }
+  list.innerHTML = state.projects.map((p, i) => {
+    const active = p.id === state.activeProjectId;
+    const num = String(p.number).padStart(2, '0');
+    return `<div class="sidebar-item${active ? ' active' : ''}" data-id="${p.id}" onclick="setActive('${p.id}')">
+      <span class="sidebar-num">${num}</span>
+      <span class="sidebar-title">${escText(p.title || '(untitled)')}</span>
+      <div class="sidebar-reorder" onclick="event.stopPropagation()">
+        <button title="Move up" ${i === 0 ? 'disabled' : ''} onclick="reorderProject('${p.id}',-1)">&#9650;</button>
+        <button title="Move down" ${i === state.projects.length-1 ? 'disabled' : ''} onclick="reorderProject('${p.id}',1)">&#9660;</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ── Render media grid ── */
+function renderMediaGrid(project) {
+  const grid = document.getElementById('media-grid');
+  const n = project.media.length;
+  document.getElementById('media-count-label').textContent = `Media — ${n} item${n !== 1 ? 's' : ''}`;
+
+  const cards = project.media.map(m => {
+    const thumb = getThumbUrl(m, project.slug);
+    const thumbHtml = thumb
+      ? `<img class="media-card-thumb" src="${escAttr(thumb)}" alt="${escAttr(m.caption)}" />`
+      : `<div class="media-card-nothumb">${m.type === 'video' ? '&#9654;' : '&#9633;'}</div>`;
+    const play = m.type === 'video' ? `<div class="media-card-play">&#9654;</div>` : '';
+    const badge = m.filename ? m.type : `${m.type} &middot; external`;
+
+    return `<div class="media-card">
+      ${thumbHtml}
+      ${play}
+      <button class="media-card-del" onclick="deleteMedia('${project.id}','${m.id}')" title="Remove">&times;</button>
+      <div class="media-card-body">
+        <input class="media-card-caption" value="${escAttr(m.caption)}" placeholder="Caption…"
+          onchange="onCaptionChange('${project.id}','${m.id}',this.value)" title="Edit caption" />
+        <div class="media-card-type">${badge}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  grid.innerHTML = cards
+    + `<button class="add-media-btn" onclick="addLocalMedia('image')"><span class="add-icon">+</span><span>Add Image</span></button>`
+    + `<button class="add-media-btn" onclick="addLocalMedia('video')"><span class="add-icon">&#9654;</span><span>Add Video</span></button>`
+    + `<button class="add-media-btn" onclick="showUrlModal()"><span class="add-icon">&#8734;</span><span>Add by URL</span></button>`;
+}
+
+function getThumbUrl(media, slug) {
+  if (media.thumbSrc) return media.thumbSrc;
+  if (media.src) return media.src;
+  if (media.filename) {
+    const file = state.pendingWrites.get(`${slug}/${media.filename}`);
+    if (file) return URL.createObjectURL(file);
+  }
+  return null;
+}
+
+/* ── Panel visibility ── */
+function showPanel(which) {
+  document.getElementById('no-folder-msg').style.display = which === 'no-folder' ? '' : 'none';
+  document.getElementById('no-project-msg').style.display = which === 'no-project' ? '' : 'none';
+  document.getElementById('project-editor').style.display = which === 'editor' ? '' : 'none';
+}
+
+/* ── Dirty / save button ── */
+function setDirty() {
+  state.dirty = true;
+  updateSaveBtn();
+}
+function updateSaveBtn() {
+  const btn = document.getElementById('btn-save');
+  const canSave = state.dirty && !!state.dirHandle;
+  btn.disabled = !canSave;
+  btn.classList.toggle('dirty', canSave);
+}
+
+/* ── Status banner ── */
+let bannerTimer;
+function showBanner(msg, type = 'info') {
+  const el = document.getElementById('status-banner');
+  el.textContent = msg;
+  el.className = `visible ${type}`;
+  clearTimeout(bannerTimer);
+  if (type !== 'error') bannerTimer = setTimeout(() => el.classList.remove('visible'), 6000);
+}
+
+/* ── Confirm modal ── */
+function showConfirm(title, msg, onOk) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  document.getElementById('confirm-ok').onclick = () => { closeConfirm(); onOk(); };
+  document.getElementById('confirm-modal').classList.add('visible');
+}
+function closeConfirm() {
+  document.getElementById('confirm-modal').classList.remove('visible');
+}
+
+/* ── Init ── */
+if (!('showDirectoryPicker' in window)) {
+  document.getElementById('browser-error').classList.add('visible');
+}
+
+window.addEventListener('beforeunload', e => {
+  if (state.dirty) { e.preventDefault(); e.returnValue = ''; }
+});
+
+showPanel('no-folder');
+</script>
+</body>
+</html>
