@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Theme Editor — Portfolio</title>
+  <link id="theme-link" rel="stylesheet" href="theme.css" />
+  <link id="preview-fonts-link" rel="stylesheet" href="" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      color: #d0cdc6;
+      font-family: 'Space Mono', monospace, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    #editor-header {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      border-bottom: 1px solid rgba(240,237,230,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: #0a0a0a;
+    }
+
+    #editor-header h1 {
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(201,169,110,0.8);
+      font-weight: 400;
+    }
+
+    #btn-download {
+      background: none;
+      border: 1px solid rgba(201,169,110,0.4);
+      color: #c9a96e;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 8px 20px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    #btn-download:hover {
+      background: rgba(201,169,110,0.08);
+      border-color: #c9a96e;
+    }
+
+    /* ── Layout ── */
+    #editor-body {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      height: calc(100vh - 56px);
+    }
+
+    /* ── Controls panel ── */
+    #controls {
+      border-right: 1px solid rgba(240,237,230,0.08);
+      padding: 32px 28px;
+      overflow-y: auto;
+    }
+
+    .control-section {
+      margin-bottom: 36px;
+    }
+
+    .control-section-label {
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: rgba(201,169,110,0.6);
+      margin-bottom: 16px;
+    }
+
+    .control-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    .control-label {
+      font-size: 11px;
+      color: rgba(240,237,230,0.5);
+      letter-spacing: 0.05em;
+    }
+
+    .color-swatch-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .color-hex {
+      font-size: 11px;
+      color: rgba(240,237,230,0.4);
+      letter-spacing: 0.05em;
+      width: 56px;
+      text-align: right;
+    }
+
+    input[type="color"] {
+      width: 36px;
+      height: 24px;
+      border: 1px solid rgba(240,237,230,0.12);
+      border-radius: 2px;
+      background: none;
+      cursor: pointer;
+      padding: 2px;
+    }
+    input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    input[type="color"]::-webkit-color-swatch { border: none; border-radius: 1px; }
+
+    select {
+      background: #111;
+      border: 1px solid rgba(240,237,230,0.12);
+      color: rgba(240,237,230,0.7);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 6px 10px;
+      cursor: pointer;
+      width: 180px;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%237a7570' stroke-width='1.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+    }
+    select:focus { outline: 1px solid rgba(201,169,110,0.4); }
+
+    /* ── Instructions ── */
+    #instructions {
+      margin-top: 8px;
+      padding: 16px;
+      border: 1px solid rgba(240,237,230,0.07);
+      background: rgba(240,237,230,0.02);
+    }
+
+    #instructions p {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: rgba(240,237,230,0.35);
+      margin-bottom: 6px;
+    }
+    #instructions p:last-child { margin-bottom: 0; }
+    #instructions strong {
+      color: rgba(240,237,230,0.5);
+    }
+    #instructions ol {
+      margin: 8px 0 0 16px;
+    }
+    #instructions li {
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      color: rgba(240,237,230,0.3);
+      line-height: 1.8;
+    }
+
+    /* ── Preview panel ── */
+    #preview-wrap {
+      overflow-y: auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 48px;
+      background: #050505;
+    }
+
+    #preview {
+      width: 100%;
+      max-width: 640px;
+      padding: 56px 48px;
+      background: var(--preview-bg, #080808);
+      border: 1px solid var(--preview-border, rgba(240,237,230,0.07));
+    }
+
+    /* Preview elements — all use CSS vars set on #preview */
+    .pv-eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--preview-gold, #c9a96e);
+      margin-bottom: 20px;
+      font-family: var(--preview-font-ui, 'Space Mono', monospace);
+    }
+
+    .pv-name {
+      font-family: var(--preview-font-display, 'Cormorant Garamond', serif);
+      font-size: clamp(42px, 7vw, 80px);
+      font-weight: 300;
+      line-height: 0.92;
+      letter-spacing: -0.02em;
+      color: var(--preview-text, #f0ede6);
+      margin-bottom: 24px;
+    }
+    .pv-name em {
+      font-style: italic;
+      color: var(--preview-gold, #c9a96e);
+    }
+
+    .pv-tagline {
+      font-family: var(--preview-font-ui, 'Space Mono', monospace);
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--preview-text-dim, #7a7570);
+      max-width: 400px;
+      margin-bottom: 40px;
+    }
+
+    .pv-divider {
+      border: none;
+      border-top: 1px solid var(--preview-border, rgba(240,237,230,0.07));
+      margin: 32px 0;
+    }
+
+    .pv-project-row {
+      display: flex;
+      align-items: baseline;
+      gap: 24px;
+    }
+
+    .pv-num {
+      font-family: var(--preview-font-display, 'Cormorant Garamond', serif);
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      color: var(--preview-text-dim, #7a7570);
+      font-weight: 300;
+    }
+
+    .pv-title {
+      font-family: var(--preview-font-display, 'Cormorant Garamond', serif);
+      font-size: clamp(22px, 3.5vw, 34px);
+      font-weight: 300;
+      color: var(--preview-gold, #c9a96e);
+    }
+
+    .pv-body {
+      font-family: var(--preview-font-ui, 'Space Mono', monospace);
+      font-size: 12px;
+      line-height: 1.9;
+      color: var(--preview-text, #f0ede6);
+      margin-top: 20px;
+    }
+    .pv-body span {
+      color: var(--preview-text-dim, #7a7570);
+    }
+  </style>
+</head>
+<body>
+
+  <header id="editor-header">
+    <h1>Theme Editor</h1>
+    <button id="btn-download" onclick="downloadTheme()">Download theme.css</button>
+  </header>
+
+  <div id="editor-body">
+
+    <!-- ── Controls ── -->
+    <aside id="controls">
+
+      <div class="control-section">
+        <div class="control-section-label">Colours</div>
+
+        <div class="control-row">
+          <span class="control-label">Background</span>
+          <div class="color-swatch-wrap">
+            <span class="color-hex" id="hex-bg"></span>
+            <input type="color" id="picker-bg" oninput="onColorChange('bg', this.value)" />
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Surface</span>
+          <div class="color-swatch-wrap">
+            <span class="color-hex" id="hex-bg-surface"></span>
+            <input type="color" id="picker-bg-surface" oninput="onColorChange('bgSurface', this.value)" />
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Text</span>
+          <div class="color-swatch-wrap">
+            <span class="color-hex" id="hex-text"></span>
+            <input type="color" id="picker-text" oninput="onColorChange('text', this.value)" />
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Dim Text</span>
+          <div class="color-swatch-wrap">
+            <span class="color-hex" id="hex-text-dim"></span>
+            <input type="color" id="picker-text-dim" oninput="onColorChange('textDim', this.value)" />
+          </div>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">Accent</span>
+          <div class="color-swatch-wrap">
+            <span class="color-hex" id="hex-gold"></span>
+            <input type="color" id="picker-gold" oninput="onColorChange('gold', this.value)" />
+          </div>
+        </div>
+      </div>
+
+      <div class="control-section">
+        <div class="control-section-label">Fonts</div>
+
+        <div class="control-row">
+          <span class="control-label">Display</span>
+          <select id="display-font" onchange="onFontChange()">
+            <option value="Cormorant Garamond">Cormorant Garamond</option>
+            <option value="Playfair Display">Playfair Display</option>
+            <option value="EB Garamond">EB Garamond</option>
+            <option value="DM Serif Display">DM Serif Display</option>
+            <option value="Libre Baskerville">Libre Baskerville</option>
+          </select>
+        </div>
+
+        <div class="control-row">
+          <span class="control-label">UI / Body</span>
+          <select id="ui-font" onchange="onFontChange()">
+            <option value="Space Mono">Space Mono</option>
+            <option value="JetBrains Mono">JetBrains Mono</option>
+            <option value="IBM Plex Mono">IBM Plex Mono</option>
+            <option value="Fira Code">Fira Code</option>
+            <option value="Courier Prime">Courier Prime</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="instructions">
+        <p><strong>How to apply your theme:</strong></p>
+        <ol>
+          <li>Click "Download theme.css" above</li>
+          <li>Rename the file to <strong>theme.css</strong> if needed</li>
+          <li>Copy it into the same folder as <strong>index.html</strong></li>
+          <li>Replace (overwrite) the existing theme.css</li>
+          <li>Refresh index.html in your browser</li>
+        </ol>
+      </div>
+
+    </aside>
+
+    <!-- ── Preview ── -->
+    <main id="preview-wrap">
+      <div id="preview">
+        <p class="pv-eyebrow">Selected Work — 2021–2025</p>
+        <h1 class="pv-name">James<br><em>Chorley</em></h1>
+        <p class="pv-tagline">Creative direction, brand identity, and visual systems — built for brands that refuse to be ordinary.</p>
+        <hr class="pv-divider" />
+        <div class="pv-project-row">
+          <span class="pv-num">01</span>
+          <span class="pv-title">Brand Identity System</span>
+        </div>
+        <p class="pv-body">A comprehensive brand identity system developed for a luxury hospitality group. <span>The work encompassed logo design, typography hierarchy, colour palette, and a brand standards guide.</span></p>
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    /* ── Font data ──────────────────────────────────────────────── */
+    const DISPLAY_FONTS = [
+      { name: 'Cormorant Garamond', stack: "'Cormorant Garamond', serif",
+        url: 'family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400' },
+      { name: 'Playfair Display',   stack: "'Playfair Display', serif",
+        url: 'family=Playfair+Display:ital,wght@0,300;0,400;0,500;0,600;1,400' },
+      { name: 'EB Garamond',        stack: "'EB Garamond', serif",
+        url: 'family=EB+Garamond:ital,wght@0,300;0,400;0,500;1,400' },
+      { name: 'DM Serif Display',   stack: "'DM Serif Display', serif",
+        url: 'family=DM+Serif+Display:ital,wght@0,400;1,400' },
+      { name: 'Libre Baskerville',  stack: "'Libre Baskerville', serif",
+        url: 'family=Libre+Baskerville:wght@400;700' },
+    ];
+
+    const UI_FONTS = [
+      { name: 'Space Mono',     stack: "'Space Mono', monospace",
+        url: 'family=Space+Mono:ital,wght@0,400;0,700;1,400' },
+      { name: 'JetBrains Mono', stack: "'JetBrains Mono', monospace",
+        url: 'family=JetBrains+Mono:ital,wght@0,300;0,400;0,700' },
+      { name: 'IBM Plex Mono',  stack: "'IBM Plex Mono', monospace",
+        url: 'family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,700' },
+      { name: 'Fira Code',      stack: "'Fira Code', monospace",
+        url: 'family=Fira+Code:wght@300;400;700' },
+      { name: 'Courier Prime',  stack: "'Courier Prime', monospace",
+        url: 'family=Courier+Prime:wght@400;700' },
+    ];
+
+    /* ── State ──────────────────────────────────────────────────── */
+    const state = {
+      bg:        '#080808',
+      bgSurface: '#0f0f0f',
+      text:      '#f0ede6',
+      textDim:   '#7a7570',
+      gold:      '#c9a96e',
+      displayFont: 'Cormorant Garamond',
+      uiFont:      'Space Mono',
+    };
+
+    /* ── Utilities ──────────────────────────────────────────────── */
+    function rgbToHex(rgb) {
+      if (!rgb) return null;
+      // Handle hex already
+      if (rgb.startsWith('#')) return rgb.toLowerCase();
+      const m = rgb.match(/\d+/g);
+      if (!m || m.length < 3) return null;
+      return '#' + m.slice(0, 3).map(n => parseInt(n).toString(16).padStart(2, '0')).join('');
+    }
+
+    function hexToRgba(hex, alpha) {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function extractFontName(val) {
+      // e.g. "'Cormorant Garamond', serif" → "Cormorant Garamond"
+      const m = val.match(/['"]([^'"]+)['"]/);
+      return m ? m[1] : val;
+    }
+
+    function setPickerValue(pickerId, hex) {
+      const el = document.getElementById(pickerId);
+      if (el && hex) el.value = hex;
+    }
+
+    function setHexLabel(labelId, hex) {
+      const el = document.getElementById(labelId);
+      if (el && hex) el.textContent = hex;
+    }
+
+    function setDropdownValue(selectId, name) {
+      const el = document.getElementById(selectId);
+      if (!el) return;
+      for (let i = 0; i < el.options.length; i++) {
+        if (el.options[i].value === name) { el.selectedIndex = i; return; }
+      }
+    }
+
+    function getFont(list, name) {
+      return list.find(f => f.name === name) || list[0];
+    }
+
+    /* ── Read theme on load ─────────────────────────────────────── */
+    window.addEventListener('load', () => {
+      const cs = getComputedStyle(document.documentElement);
+
+      const readColor = (token, fallback) => {
+        const raw = cs.getPropertyValue(token).trim();
+        return rgbToHex(raw) || fallback;
+      };
+
+      state.bg        = readColor('--bg',         '#080808');
+      state.bgSurface = readColor('--bg-surface',  '#0f0f0f');
+      state.text      = readColor('--text',         '#f0ede6');
+      state.textDim   = readColor('--text-dim',     '#7a7570');
+      state.gold      = readColor('--gold',         '#c9a96e');
+
+      const displayRaw = cs.getPropertyValue('--font-display').trim();
+      const uiRaw      = cs.getPropertyValue('--font-ui').trim();
+      state.displayFont = displayRaw ? extractFontName(displayRaw) : 'Cormorant Garamond';
+      state.uiFont      = uiRaw      ? extractFontName(uiRaw)      : 'Space Mono';
+
+      // Push to pickers
+      setPickerValue('picker-bg',         state.bg);
+      setPickerValue('picker-bg-surface', state.bgSurface);
+      setPickerValue('picker-text',       state.text);
+      setPickerValue('picker-text-dim',   state.textDim);
+      setPickerValue('picker-gold',       state.gold);
+
+      setDropdownValue('display-font', state.displayFont);
+      setDropdownValue('ui-font',      state.uiFont);
+
+      updatePreview();
+    });
+
+    /* ── Event handlers ─────────────────────────────────────────── */
+    function onColorChange(key, value) {
+      state[key] = value;
+      setHexLabel('hex-' + { bg:'bg', bgSurface:'bg-surface', text:'text', textDim:'text-dim', gold:'gold' }[key], value);
+      updatePreview();
+    }
+
+    function onFontChange() {
+      state.displayFont = document.getElementById('display-font').value;
+      state.uiFont      = document.getElementById('ui-font').value;
+      updatePreview();
+    }
+
+    /* ── Update preview ─────────────────────────────────────────── */
+    function updatePreview() {
+      const pv = document.getElementById('preview');
+      const displayFont = getFont(DISPLAY_FONTS, state.displayFont);
+      const uiFont      = getFont(UI_FONTS,      state.uiFont);
+
+      // Update hex labels alongside pickers
+      setHexLabel('hex-bg',         state.bg);
+      setHexLabel('hex-bg-surface', state.bgSurface);
+      setHexLabel('hex-text',       state.text);
+      setHexLabel('hex-text-dim',   state.textDim);
+      setHexLabel('hex-gold',       state.gold);
+
+      // Colours on preview element
+      pv.style.setProperty('--preview-bg',        state.bg);
+      pv.style.setProperty('--preview-text',       state.text);
+      pv.style.setProperty('--preview-text-dim',   state.textDim);
+      pv.style.setProperty('--preview-gold',       state.gold);
+      pv.style.setProperty('--preview-border',     hexToRgba(state.text, 0.07));
+      pv.style.setProperty('--preview-gold-dim',   hexToRgba(state.gold, 0.15));
+
+      // Fonts on preview element
+      pv.style.setProperty('--preview-font-display', displayFont.stack);
+      pv.style.setProperty('--preview-font-ui',      uiFont.stack);
+
+      // Load fonts
+      const fontsUrl = 'https://fonts.googleapis.com/css2?' +
+        displayFont.url + '&' + uiFont.url + '&display=swap';
+      document.getElementById('preview-fonts-link').href = fontsUrl;
+    }
+
+    /* ── Download ───────────────────────────────────────────────── */
+    function downloadTheme() {
+      const displayFont = getFont(DISPLAY_FONTS, state.displayFont);
+      const uiFont      = getFont(UI_FONTS,      state.uiFont);
+
+      const css = `/* Generated by Theme Editor */
+@import url('https://fonts.googleapis.com/css2?${displayFont.url}&${uiFont.url}&display=swap');
+
+:root {
+  /* Fonts */
+  --font-display: ${displayFont.stack};
+  --font-ui:      ${uiFont.stack};
+
+  /* Core colours */
+  --bg:          ${state.bg};
+  --bg-surface:  ${state.bgSurface};
+  --text:        ${state.text};
+  --text-dim:    ${state.textDim};
+  --gold:        ${state.gold};
+
+  /* Derived */
+  --gold-dim:    ${hexToRgba(state.gold, 0.15)};
+  --gold-glow:   ${hexToRgba(state.gold, 0.06)};
+  --border:      ${hexToRgba(state.text, 0.07)};
+
+  /* Layout constants */
+  --scroll-h:    280px;
+  --header-h:    64px;
+}
+`;
+
+      const blob = new Blob([css], { type: 'text/css' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = 'theme.css';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
