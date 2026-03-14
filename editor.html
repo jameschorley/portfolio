@@ -110,6 +110,19 @@
       text-align: right;
     }
 
+    input[type="text"] {
+      background: #111;
+      border: 1px solid rgba(240,237,230,0.12);
+      color: rgba(240,237,230,0.7);
+      font-family: inherit;
+      font-size: 11px;
+      padding: 6px 10px;
+      width: 180px;
+    }
+    input[type="text"]:focus {
+      outline: 1px solid rgba(201,169,110,0.4);
+    }
+
     input[type="color"] {
       width: 36px;
       height: 24px;
@@ -138,6 +151,30 @@
       background-position: right 10px center;
     }
     select:focus { outline: 1px solid rgba(201,169,110,0.4); }
+
+    /* ── Copy textarea ── */
+    textarea {
+      background: #111;
+      border: 1px solid rgba(240,237,230,0.12);
+      color: rgba(240,237,230,0.7);
+      font-family: inherit;
+      font-size: 11px;
+      line-height: 1.7;
+      padding: 10px 12px;
+      width: 100%;
+      resize: vertical;
+      min-height: 90px;
+    }
+    textarea:focus {
+      outline: 1px solid rgba(201,169,110,0.4);
+    }
+    .copy-note {
+      margin-top: 8px;
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      color: rgba(240,237,230,0.25);
+      line-height: 1.6;
+    }
 
     /* ── Instructions ── */
     #instructions {
@@ -324,6 +361,9 @@
             <option value="EB Garamond">EB Garamond</option>
             <option value="DM Serif Display">DM Serif Display</option>
             <option value="Libre Baskerville">Libre Baskerville</option>
+            <option value="Bodoni Moda">Bodoni Moda</option>
+            <option value="Fraunces">Fraunces</option>
+            <option value="Gilda Display">Gilda Display</option>
           </select>
         </div>
 
@@ -335,8 +375,26 @@
             <option value="IBM Plex Mono">IBM Plex Mono</option>
             <option value="Fira Code">Fira Code</option>
             <option value="Courier Prime">Courier Prime</option>
+            <option value="Roboto Mono">Roboto Mono</option>
+            <option value="Inconsolata">Inconsolata</option>
+            <option value="Source Code Pro">Source Code Pro</option>
+            <option value="Overpass Mono">Overpass Mono</option>
+            <option value="Martian Mono">Martian Mono</option>
+            <option value="Syne Mono">Syne Mono</option>
+            <option value="Anonymous Pro">Anonymous Pro</option>
+            <option value="Share Tech Mono">Share Tech Mono</option>
           </select>
         </div>
+      </div>
+
+      <div class="control-section">
+        <div class="control-section-label">Copy</div>
+        <div class="control-row">
+          <span class="control-label">Date range</span>
+          <input type="text" id="eyebrow-input" oninput="onEyebrowChange()" value="Selected Work — 2021–2025" />
+        </div>
+        <textarea id="tagline-input" oninput="onTaglineChange()" placeholder="Your about / tagline copy…">Creative direction, brand identity, and visual systems — built for brands that refuse to be ordinary.</textarea>
+        <p class="copy-note">Updates the preview only. To apply, paste into index.html.</p>
       </div>
 
       <div id="instructions">
@@ -382,6 +440,12 @@
         url: 'family=DM+Serif+Display:ital,wght@0,400;1,400' },
       { name: 'Libre Baskerville',  stack: "'Libre Baskerville', serif",
         url: 'family=Libre+Baskerville:wght@400;700' },
+      { name: 'Bodoni Moda',        stack: "'Bodoni Moda', serif",
+        url: 'family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,700;1,6..96,400' },
+      { name: 'Fraunces',           stack: "'Fraunces', serif",
+        url: 'family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400' },
+      { name: 'Gilda Display',      stack: "'Gilda Display', serif",
+        url: 'family=Gilda+Display' },
     ];
 
     const UI_FONTS = [
@@ -395,6 +459,22 @@
         url: 'family=Fira+Code:wght@300;400;700' },
       { name: 'Courier Prime',  stack: "'Courier Prime', monospace",
         url: 'family=Courier+Prime:wght@400;700' },
+      { name: 'Roboto Mono',    stack: "'Roboto Mono', monospace",
+        url: 'family=Roboto+Mono:ital,wght@0,300;0,400;0,700;1,400' },
+      { name: 'Inconsolata',      stack: "'Inconsolata', monospace",
+        url: 'family=Inconsolata:wght@300;400;700' },
+      { name: 'Source Code Pro',  stack: "'Source Code Pro', monospace",
+        url: 'family=Source+Code+Pro:ital,wght@0,300;0,400;0,700;1,400' },
+      { name: 'Overpass Mono',    stack: "'Overpass Mono', monospace",
+        url: 'family=Overpass+Mono:wght@300;400;700' },
+      { name: 'Martian Mono',     stack: "'Martian Mono', monospace",
+        url: 'family=Martian+Mono:wght@300;400;700' },
+      { name: 'Syne Mono',        stack: "'Syne Mono', monospace",
+        url: 'family=Syne+Mono' },
+      { name: 'Anonymous Pro',    stack: "'Anonymous Pro', monospace",
+        url: 'family=Anonymous+Pro:ital,wght@0,400;0,700;1,400' },
+      { name: 'Share Tech Mono',  stack: "'Share Tech Mono', monospace",
+        url: 'family=Share+Tech+Mono' },
     ];
 
     /* ── State ──────────────────────────────────────────────────── */
@@ -406,6 +486,8 @@
       gold:      '#c9a96e',
       displayFont: 'Cormorant Garamond',
       uiFont:      'Space Mono',
+      eyebrow:     'Selected Work — 2021–2025',
+      tagline:     'Creative direction, brand identity, and visual systems — built for brands that refuse to be ordinary.',
     };
 
     /* ── Utilities ──────────────────────────────────────────────── */
@@ -499,6 +581,16 @@
       updatePreview();
     }
 
+    function onEyebrowChange() {
+      state.eyebrow = document.getElementById('eyebrow-input').value;
+      updatePreview();
+    }
+
+    function onTaglineChange() {
+      state.tagline = document.getElementById('tagline-input').value;
+      updatePreview();
+    }
+
     /* ── Update preview ─────────────────────────────────────────── */
     function updatePreview() {
       const pv = document.getElementById('preview');
@@ -523,6 +615,10 @@
       // Fonts on preview element
       pv.style.setProperty('--preview-font-display', displayFont.stack);
       pv.style.setProperty('--preview-font-ui',      uiFont.stack);
+
+      // Copy
+      document.querySelector('.pv-eyebrow').textContent = state.eyebrow;
+      document.querySelector('.pv-tagline').textContent = state.tagline;
 
       // Load fonts
       const fontsUrl = 'https://fonts.googleapis.com/css2?' +
