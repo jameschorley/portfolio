@@ -42,7 +42,7 @@ nav a:hover { color: var(--gold); }
 
 /* ── Hero ──────────────────────────────────────────────────────── */
 #hero {
-  min-height: 55vh;
+  min-height: 65vh;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -84,22 +84,6 @@ nav a:hover { color: var(--gold); }
   color: var(--text-dim);
   opacity: 0;
   animation: fadeUp 0.9s 0.7s forwards;
-}
-
-.hero-meta {
-  position: absolute;
-  bottom: 48px;
-  right: 48px;
-  text-align: right;
-  opacity: 0;
-  animation: fadeUp 0.9s 0.9s forwards;
-}
-.hero-meta p {
-  font-size: 10px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--text-dim);
-  line-height: 2;
 }
 
 @keyframes fadeUp {

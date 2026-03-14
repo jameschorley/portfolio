@@ -69,3 +69,14 @@ Video items also need `class="is-video"` on `.media-item` and the play-icon SVG 
 - Commit every meaningful change with a clear message describing *what changed and why*
 - Push after every commit so GitHub always has the latest
 - Commit message format: imperative mood, present tense — e.g. `Add project 6 — motion graphics reel`, `Fix lightbox keyboard nav on Safari`
+
+## Automatic Git Commits
+
+After every session in which any file is created, modified, or deleted:
+
+1. Run `git add -A`
+2. Commit with a message following the conventions above
+3. Run `git push`
+
+Do this automatically at the end of every session — do not wait to be asked.
+If a commit fails, flag it clearly before closing.
