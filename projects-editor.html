@@ -4,19 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Projects Editor — Portfolio</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="theme.css" />
   <style>
     :root {
-      --bg: #080808;
       --surface: #111111;
       --surface2: #1a1a1a;
       --border: #2a2a2a;
-      --text: #f0ede6;
-      --text-dim: #7a7570;
-      --gold: #c9a96e;
-      --gold-dim: rgba(201,169,110,0.12);
       --red: #c96e6e;
       --red-dim: rgba(201,110,110,0.12);
       --green: #6ec98a;
@@ -24,12 +17,12 @@
       --header-h: 56px;
     }
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'Space Mono', monospace; font-size: 13px; overflow: hidden; }
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-ui); font-size: 13px; overflow: hidden; }
 
     /* ── Browser error ── */
     #browser-error { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 9999; place-items: center; text-align: center; padding: 2rem; }
     #browser-error.visible { display: grid; }
-    #browser-error h2 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 2rem; color: var(--gold); margin-bottom: 1rem; }
+    #browser-error h2 { font-family: var(--font-display); font-size: 2rem; color: var(--gold); margin-bottom: 1rem; }
     #browser-error p { color: var(--text-dim); line-height: 1.8; max-width: 460px; }
     #browser-error code { background: var(--surface2); padding: 0.1em 0.4em; border-radius: 3px; }
 
@@ -38,7 +31,7 @@
 
     /* ── Header ── */
     #editor-header { flex: 0 0 var(--header-h); display: flex; align-items: center; justify-content: space-between; padding: 0 1.5rem; border-bottom: 1px solid var(--border); background: var(--surface); z-index: 10; }
-    #editor-header h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.2rem; font-weight: 400; letter-spacing: 0.05em; color: var(--gold); }
+    #editor-header h1 { font-family: var(--font-display); font-size: 1.2rem; font-weight: 400; letter-spacing: 0.05em; color: var(--gold); }
     .header-actions { display: flex; gap: 0.75rem; align-items: center; }
 
     /* ── Status banner ── */
@@ -72,7 +65,7 @@
 
     /* ── Form fields ── */
     .field-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-dim); margin-bottom: 0.4rem; display: block; }
-    .field-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 13px; padding: 0.55rem 0.75rem; transition: border-color 0.15s; outline: none; }
+    .field-input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 4px; color: var(--text); font-family: var(--font-ui); font-size: 13px; padding: 0.55rem 0.75rem; transition: border-color 0.15s; outline: none; }
     .field-input:focus { border-color: var(--gold); }
     textarea.field-input { resize: vertical; min-height: 90px; line-height: 1.6; }
 
@@ -88,7 +81,7 @@
     .media-card-nothumb { width: 100%; height: 100px; background: var(--surface2); display: flex; align-items: center; justify-content: center; color: var(--text-dim); font-size: 1.5rem; }
     .media-card-play { position: absolute; top: 28px; left: 50%; transform: translateX(-50%); color: rgba(255,255,255,0.75); pointer-events: none; font-size: 22px; }
     .media-card-body { padding: 0.4rem 0.5rem 0.5rem; }
-    .media-card-caption { font-size: 11px; color: var(--text); background: none; border: none; border-bottom: 1px solid transparent; width: 100%; font-family: 'Space Mono', monospace; outline: none; padding: 2px 0; }
+    .media-card-caption { font-size: 11px; color: var(--text); background: none; border: none; border-bottom: 1px solid transparent; width: 100%; font-family: var(--font-ui); outline: none; padding: 2px 0; }
     .media-card-caption:focus { border-bottom-color: var(--gold); }
     .media-card-type { font-size: 9px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; }
     .media-card-del { position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.65); border: none; color: white; width: 20px; height: 20px; border-radius: 50%; cursor: pointer; font-size: 13px; line-height: 1; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s, background 0.12s; }
@@ -96,7 +89,7 @@
     .media-card-del:hover { background: var(--red); }
 
     /* ── Add media buttons ── */
-    .add-media-btn { width: 160px; height: 140px; background: none; border: 1px dashed var(--border); border-radius: 4px; color: var(--text-dim); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem; font-family: 'Space Mono', monospace; font-size: 11px; transition: border-color 0.15s, color 0.15s; flex-shrink: 0; }
+    .add-media-btn { width: 160px; height: 140px; background: none; border: 1px dashed var(--border); border-radius: 4px; color: var(--text-dim); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4rem; font-family: var(--font-ui); font-size: 11px; transition: border-color 0.15s, color 0.15s; flex-shrink: 0; }
     .add-media-btn:hover { border-color: var(--gold); color: var(--gold); }
     .add-media-btn .add-icon { font-size: 1.3rem; }
 
@@ -105,7 +98,7 @@
     #delete-zone p { color: var(--text-dim); font-size: 12px; }
 
     /* ── Buttons ── */
-    .btn { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); font-family: 'Space Mono', monospace; font-size: 12px; cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap; }
+    .btn { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text); font-family: var(--font-ui); font-size: 12px; cursor: pointer; transition: border-color 0.15s, color 0.15s; white-space: nowrap; }
     .btn:hover { border-color: var(--gold); color: var(--gold); }
     .btn:disabled { opacity: 0.3; cursor: not-allowed; border-color: var(--border) !important; color: var(--text-dim) !important; }
     .btn-primary { background: var(--gold); border-color: var(--gold); color: #080808; font-weight: 700; }
@@ -122,7 +115,7 @@
     .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 100; place-items: center; }
     .modal-backdrop.visible { display: grid; }
     .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 1.5rem; width: 420px; max-width: 92vw; }
-    .modal h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 1.3rem; font-weight: 400; margin-bottom: 1rem; color: var(--gold); }
+    .modal h3 { font-family: var(--font-display); font-size: 1.3rem; font-weight: 400; margin-bottom: 1rem; color: var(--gold); }
     .modal-body { display: flex; flex-direction: column; gap: 1rem; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
 
@@ -157,7 +150,7 @@
     <h1>Projects Editor</h1>
     <div class="header-actions">
       <button class="btn" id="btn-open" onclick="openFolder()">Open Portfolio Folder</button>
-      <button class="btn btn-primary" id="btn-save" onclick="saveAll()" disabled>Save to index.html</button>
+      <button class="btn" id="btn-save" onclick="saveAll()" disabled>Save to index.html</button>
     </div>
   </header>
 
